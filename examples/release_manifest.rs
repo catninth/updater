@@ -14,12 +14,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let repository = Repository::parse(&args[1])?;
     let public_key = fs::read_to_string(&args[3])?;
     let mut manifest = ReleaseManifest::new(&args[0], fs::read_to_string(&args[4])?)?;
-    for pair in args[6..].chunks_exact(2) {
+    for [platform, artifact] in args[6..].as_chunks::<2>().0 {
         manifest.add_file(
-            Platform::parse(&pair[0])?,
+            Platform::parse(platform)?,
             &repository,
             &args[2],
-            Path::new(&pair[1]),
+            Path::new(artifact),
             &public_key,
         )?;
     }
