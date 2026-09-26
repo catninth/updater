@@ -1,0 +1,34 @@
+[package]
+name = "catninth-updater"
+version = "0.1.0"
+edition = "2024"
+description = "Reusable GitHub release updater and signed installer tooling for desktop applications"
+repository = "https://github.com/catninth/updater"
+readme = "README.md"
+
+[features]
+default = []
+tauri = ["dep:tauri", "dep:tauri-plugin-updater"]
+
+[dependencies]
+async-trait = "0.1"
+base64 = "0.22"
+minisign-verify = "0.2"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls-no-provider", "system-proxy"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+semver = { version = "1", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
+url = { version = "2", features = ["serde"] }
+tauri = { version = "2.10", default-features = false, optional = true }
+tauri-plugin-updater = { version = "2.11", optional = true }
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["rt-multi-thread", "test-util", "net", "io-util"] }
+
+[[example]]
+name = "tauri_integration"
+required-features = ["tauri"]
