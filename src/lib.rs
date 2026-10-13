@@ -9,6 +9,7 @@ mod config;
 mod error;
 pub mod github;
 pub mod installer;
+pub mod manifest;
 mod model;
 mod updater;
 

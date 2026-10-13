@@ -166,6 +166,50 @@ github.com release assets. Downloading private or Enterprise packages requires
 a custom `InstallBackend`. The token is not automatically forwarded to package
 URLs.
 
+### Public releases without GitHub API requests
+
+Public applications that publish a `latest.json` asset can explicitly select
+`manifest::GitHubManifestSource`. It reads release assets directly, so update
+checks do not consume GitHub's unauthenticated REST API quota or require a token.
+The default `GitHubSource` and its token/Enterprise behavior remain unchanged.
+
+```rust,no_run
+use catninth_updater::{Config, Repository, Updater, manifest::GitHubManifestSource};
+use std::sync::Arc;
+
+# fn example() -> catninth_updater::Result<()> {
+let config = Config::new(Repository::parse("catninth/clipcat")?, "0.8.0", 360)?;
+let source = GitHubManifestSource::new(
+    config.repository().clone(),
+    config.request_timeout(),
+)?;
+let updater = Updater::builder(config).source(Arc::new(source)).build()?;
+# Ok(())
+# }
+```
+
+This source gets the version, Markdown notes, and optional publication date from
+the manifest's `version`, `notes`, and `pub_date` fields. Every platform artifact
+must use an HTTPS GitHub release asset URL in the configured repository, and all
+artifact URLs must identify the same matching SemVer tag, with or without a `v`
+prefix. This preserves the exact tag even when GitHub redirects the manifest to
+an opaque CDN URL. Prerelease versions are excluded from latest checks.
+
+Patch notes come from a tag-pinned manifest, with the alternate `v` prefix tried
+only after a 404. Missing manifests return `None`; malformed manifests and other
+HTTP or network failures remain errors. No REST API fallback is attempted.
+The source supports public repositories and SemVer release tags; use
+`GitHubSource` for private metadata or arbitrary patch-note tags.
+
+The manifest is metadata, not a signed document. The installer still pins the
+selected release, checks its version, and verifies the downloaded artifact's
+signature before installation. `with_base_url()` optionally configures a public
+asset mirror; HTTP is allowed only for loopback test servers. Tokens are never
+attached to this source's requests.
+
+Run a read-only public update check with
+`cargo run --example manifest_check -- catninth/clipcat 0.8.0`.
+
 ## Building installers and publishing releases
 
 The `installer` module uses the Tauri 2 CLI to build native installers from the
